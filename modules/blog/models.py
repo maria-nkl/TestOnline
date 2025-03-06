@@ -24,7 +24,7 @@ class Article(models.Model):
     thumbnail = models.ImageField(
         verbose_name='Превью поста', 
         blank=True, 
-        upload_to='images/thumbnails/', 
+        upload_to='images/thumbnails/%Y/%m/%d/', 
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))]
     )
     status = models.CharField(choices=STATUS_OPTIONS, default='published', verbose_name='Статус поста', max_length=10)
