@@ -8,5 +8,7 @@
         <small>{{ article.time_create }}</small>
         <hr>
         <span>{{ article.category.title }}</span>
+        <hr>
+        <a href="{{ article.get_absolute_url }}">Подробнее</a>
     {% endfor %}
 {% endblock %}
