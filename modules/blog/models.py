@@ -98,3 +98,6 @@ class Category(MPTTModel):
         Возвращение заголовка статьи
         """
         return self.title
+    
+    def get_absolute_url(self):
+        return reverse('articles_by_category', kwargs={'slug': self.slug})
