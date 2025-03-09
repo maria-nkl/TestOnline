@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'modules.blog.apps.BlogConfig',
-    #'mptt',
+    'mptt',
     'modules.services',
 ]
 
