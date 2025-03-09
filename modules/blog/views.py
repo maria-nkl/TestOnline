@@ -1,8 +1,9 @@
-from django.shortcuts import render
+from django.views.generic import ListView
 
 from .models import Article
 
 
-def articles_list(request):
-    articles = Article.objects.all()
-    return render(request, 'blog/articles_list.html', {'articles': articles})
+class ArticleListView(ListView):
+    model = Article
+    template_name = 'blog/articles_list.html'
+    context_object_name = 'articles'
