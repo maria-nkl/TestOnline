@@ -7,6 +7,7 @@ class ArticleListView(ListView):
     model = Article
     template_name = 'blog/articles_list.html'
     context_object_name = 'articles'
+    paginate_by = 2
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
