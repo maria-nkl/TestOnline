@@ -25,7 +25,7 @@ class Article(models.Model):
             """
             Список статей (SQL запрос с фильтрацией для страницы списка статей)
             """
-            return self.get_queryset().filter(status='published')
+            return self.get_queryset().select_related('author', 'category').filter(status='published')
 
     STATUS_OPTIONS = (
         ('published', 'Опубликовано'), 
