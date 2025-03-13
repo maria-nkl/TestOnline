@@ -24,6 +24,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('modules.blog.urls')),
+    path('', include('modules.system.urls')),
 ]
 
 if settings.DEBUG:
