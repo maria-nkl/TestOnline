@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sites',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
     'modules.services',
     'debug_toolbar',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -144,7 +147,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_HOST = 'mail.ksu42.ru'  # Например, 'smtp.gmail.com' для Gmail
-EMAIL_PORT = 143  # Порт для SMTP (обычно 587 для TLS)
+EMAIL_PORT = 25  # Порт для SMTP (обычно 587 для TLS)
 EMAIL_USE_TLS = False  # Использовать TLS (True для большинства SMTP-серверов)
 
 EMAIL_HOST_USER = 'nikolaevams@ksu42.ru'  # Ваш email
