@@ -137,3 +137,19 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# settings email
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'mail.ksu42.ru'  # Например, 'smtp.gmail.com' для Gmail
+EMAIL_PORT = 143  # Порт для SMTP (обычно 587 для TLS)
+EMAIL_USE_TLS = False  # Использовать TLS (True для большинства SMTP-серверов)
+
+EMAIL_HOST_USER = 'nikolaevams@ksu42.ru'  # Ваш email
+EMAIL_HOST_PASSWORD = 'Qfdi0a99bv'  # Пароль от вашего email
+
+EMAIL_SERVER = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Email, который будет использоваться как отправитель по умолчанию
+EMAIL_ADMIN = ['nikolaevamaria2004@gmail.com']
