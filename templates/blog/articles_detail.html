@@ -29,3 +29,20 @@
 	</div>
 </div>
 {% endblock %}
+
+{% block sidebar %}
+<div class="card mb-2 border-0">
+    <div class="card-body">
+        <div class="card-title">
+           Похожие статьи
+        </div>
+        <div class="card-text">
+            <ul class="similar-articles">
+                {% for sim_article in similar_articles %}
+                    <li><a href="{{ sim_article.get_absolute_url }}">{{ sim_article.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
