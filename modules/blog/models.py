@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from taggit.managers import TaggableManager
 
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -33,7 +34,7 @@ class Article(models.Model):
             """
             return self.get_queryset()\
                 .select_related('author', 'category')\
-                .prefetch_related('comments', 'comments__author', 'comments__author__profile')\
+                .prefetch_related('comments', 'comments__author', 'comments__author__profile', 'tags')\
                 .filter(status='published')
 
     STATUS_OPTIONS = (
@@ -59,6 +60,7 @@ class Article(models.Model):
     fixed = models.BooleanField(verbose_name='Зафиксировано', default=False)
     category = TreeForeignKey('Category', on_delete=models.PROTECT, related_name='articles', verbose_name='Категория')
     objects = ArticleManager()
+    tags = TaggableManager()
 
     class Meta:
         db_table = 'app_articles'
