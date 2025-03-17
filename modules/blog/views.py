@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
+from taggit.models import Tag
 
 from .models import Article, Category, Comment
 from .forms import ArticleCreateForm, ArticleUpdateForm, CommentCreateForm
@@ -50,6 +51,24 @@ class ArticleByCategoryListView(ListView):
         context['title'] = f'Статьи из категории: {self.category.title}' 
         return context
 
+
+class ArticleByTagListView(ListView):
+    model = Article
+    template_name = 'blog/articles_list.html'
+    context_object_name = 'articles'
+    paginate_by = 10
+    tag = None
+
+    def get_queryset(self):
+        self.tag = Tag.objects.get(slug=self.kwargs['tag'])
+        queryset = Article.objects.all().filter(tags__slug=self.tag.slug)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Статьи по тегу: {self.tag.name}'
+        return context
+    
 
 class ArticleCreateView(LoginRequiredMixin, CreateView):
     """
@@ -143,3 +162,4 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def handle_no_permission(self):
         return JsonResponse({'error': 'Необходимо авторизоваться для добавления комментариев'}, status=400)
+
