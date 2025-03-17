@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Article
+from .models import Article, Comment
 
 
 class ArticleCreateForm(forms.ModelForm):
@@ -40,3 +40,15 @@ class ArticleUpdateForm(ArticleCreateForm):
         self.fields['fixed'].widget.attrs.update({
                 'class': 'form-check-input'
         })
+
+
+class CommentCreateForm(forms.ModelForm):
+    """
+    Форма добавления комментариев к статьям
+    """
+    parent = forms.IntegerField(widget=forms.HiddenInput, required=False)
+    content = forms.CharField(label='', widget=forms.Textarea(attrs={'cols': 30, 'rows': 5, 'placeholder': 'Комментарий', 'class': 'form-control'}))
+
+    class Meta:
+        model = Comment
+        fields = ('content',)
