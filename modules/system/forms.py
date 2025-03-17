@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm, SetPasswordForm
+# from django.conf import settings
+# from django_recaptcha.fields import ReCaptchaField
+# from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
 from .models import Profile, Feedback
 
@@ -60,10 +63,6 @@ class ProfileUpdateForm(forms.ModelForm):
 РЕГИСТРАЦИЯ
 """
 
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-
-
 class UserRegisterForm(UserCreationForm):
     """
     Переопределенная форма регистрации пользователей
@@ -71,6 +70,9 @@ class UserRegisterForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name')
+
+    # recaptcha = ReCaptchaField(widget=ReCaptchaV2Checkbox, public_key=settings.RECAPTCHA_PUBLIC_KEY,
+    #                            private_key=settings.RECAPTCHA_PRIVATE_KEY, label='ReCAPTCHA')
 
     def clean_email(self):
         """
@@ -101,12 +103,13 @@ class UserRegisterForm(UserCreationForm):
 АВТОРИЗАЦИЯ
 """
 
-from django.contrib.auth.forms import AuthenticationForm
-
 class UserLoginForm(AuthenticationForm):
     """
     Форма авторизации на сайте
     """
+
+    # recaptcha = ReCaptchaField(widget=ReCaptchaV2Checkbox, public_key=settings.RECAPTCHA_PUBLIC_KEY,
+    #                            private_key=settings.RECAPTCHA_PRIVATE_KEY, label='ReCAPTCHA')
 
     def __init__(self, *args, **kwargs):
         """
@@ -144,6 +147,9 @@ class UserForgotPasswordForm(PasswordResetForm):
     Запрос на восстановление пароля
     """
 
+    # recaptcha = ReCaptchaField(widget=ReCaptchaV2Checkbox, public_key=settings.RECAPTCHA_PUBLIC_KEY,
+    #                            private_key=settings.RECAPTCHA_PRIVATE_KEY, label='ReCAPTCHA')
+    
     def __init__(self, *args, **kwargs):
         """
         Обновление стилей формы

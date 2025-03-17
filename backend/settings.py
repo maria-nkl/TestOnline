@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'modules.services',
     'debug_toolbar',
     'taggit',
+    # 'django_recaptcha'
 ]
 
 SITE_ID = 1
@@ -157,3 +158,6 @@ EMAIL_HOST_PASSWORD = 'Qfdi0a99bv'  # Пароль от вашего email
 EMAIL_SERVER = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Email, который будет использоваться как отправитель по умолчанию
 EMAIL_ADMIN = ['nikolaevamaria2004@gmail.com']
+
+# RECAPTCHA_PUBLIC_KEY = '6LfSPPcqAAAAADnz1DfjyiLOIyYTcHkmAUnXHv9T'
+# RECAPTCHA_PRIVATE_KEY = '6LfSPPcqAAAAAORodQwIryHJgNd3J2zs7dYzBRYI'
