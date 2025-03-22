@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 import random
 from django.db.models import Count
 from taggit.models import Tag
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 from .models import Article, Category, Comment
 from .forms import ArticleCreateForm, ArticleUpdateForm, CommentCreateForm
@@ -174,3 +175,24 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     def handle_no_permission(self):
         return JsonResponse({'error': 'Необходимо авторизоваться для добавления комментариев'}, status=400)
 
+
+class ArticleSearchResultView(ListView):
+    """
+    Реализация поиска статей на сайте
+    """
+    model = Article
+    context_object_name = 'articles'
+    paginate_by = 10
+    allow_empty = True
+    template_name = 'blog/articles_list.html'
+
+    def get_queryset(self):
+        query = self.request.GET.get('do')
+        search_vector = SearchVector('full_description', weight='B') + SearchVector('title', weight='A')
+        search_query = SearchQuery(query)
+        return (self.model.objects.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.3).order_by('-rank'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Результаты поиска: {self.request.GET.get("do")}'
+        return context
