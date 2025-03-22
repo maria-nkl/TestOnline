@@ -3,6 +3,7 @@ from django.core.validators import FileExtensionValidator
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from taggit.managers import TaggableManager
+from django_ckeditor_5.fields import CKEditor5Field
 
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -44,8 +45,8 @@ class Article(models.Model):
 
     title = models.CharField(verbose_name='Заголовок', max_length=255)
     slug = models.SlugField(verbose_name='URL', max_length=255, blank=True, unique=True)
-    short_description = models.TextField(verbose_name='Краткое описание', max_length=500)
-    full_description = models.TextField(verbose_name='Полное описание')
+    short_description = CKEditor5Field(max_length=500, verbose_name='Краткое описание', config_name='extends')
+    full_description = CKEditor5Field(verbose_name='Полное описание', config_name='extends')
     thumbnail = models.ImageField(
         verbose_name='Превью поста', 
         blank=True, 
