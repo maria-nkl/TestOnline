@@ -1,62 +1,136 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<div class="card mb-3 border-0 nth-shadow">
-    <div class="card-body">
-        <div class="card-title nth-card-title">
-            <h4>Обновление статьи: {{ article.title }}</h4>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0"><i class="fas fa-edit mr-2"></i>Редактирование статьи: {{ article.title }}</h4>
         </div>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.media }}
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.media }}
 
-            {# Основные поля статьи #}
-            {% for field in form %}
-                {% if field.name not in 'files delete_files' %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Заголовок статьи</label>
+                            {{ form.title }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">URL-адрес</label>
+                            {{ form.slug }}
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.help_text %}
-                    <small class="form-text text-muted">{{ field.help_text }}</small>
-                    {% endif %}
+                    <label class="font-weight-bold">Категория</label>
+                    {{ form.category }}
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">Краткое описание</label>
+                    {{ form.short_description }}
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">Полное содержание</label>
+                    {{ form.full_description }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Превью изображение</label>
+                            {{ form.thumbnail }}
+                            {% if article.thumbnail %}
+                                <div class="mt-2">
+                                    <img src="{{ article.thumbnail.url }}" class="img-thumbnail" style="max-height: 100px;">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Статус</label>
+                            {{ form.status }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group form-check">
+                            {{ form.fixed }}
+                            <label class="form-check-label font-weight-bold" for="{{ form.fixed.id_for_label }}">
+                                Закрепить статью
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {% if article.files.all %}
+                <div class="form-group">
+                    <label class="font-weight-bold">Текущие файлы</label>
+                    <div class="list-group">
+                        {% for file in article.files.all %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <input type="checkbox" name="delete_files" value="{{ file.id }}"
+                                       id="delete_file_{{ file.id }}" class="mr-3">
+                                <label for="delete_file_{{ file.id }}" class="mb-0">
+                                    <i class="fas {{ file.get_file_icon }} text-primary mr-2"></i>
+                                    {{ file.title }}
+                                </label>
+                            </div>
+                            <div>
+                                <span class="badge badge-secondary mr-2">{{ file.get_file_type }}</span>
+                                <span class="text-muted">{{ file.file.size|filesizeformat }}</span>
+                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="form-text text-muted">Отметьте файлы для удаления</small>
                 </div>
                 {% endif %}
-            {% endfor %}
 
-            {# Существующие файлы для удаления #}
-            {% if article.files.all %}
-            <div class="form-group">
-                <label>Удалить файлы:</label>
-                <div class="pl-3">
-                    {% for file in article.files.all %}
-                    <div class="form-check">
-                        <input type="checkbox" name="delete_files" value="{{ file.id }}"
-                               class="form-check-input" id="delete_file_{{ file.id }}">
-                        <label class="form-check-label" for="delete_file_{{ file.id }}">
-                            <i class="fas {{ file.get_file_icon }} mr-2"></i>
-                            {{ file.title }}
-                            <small class="text-muted ml-2">({{ file.file.size|filesizeformat }})</small>
-                        </label>
+                <div class="form-group">
+                    <label class="font-weight-bold">Добавить новые файлы</label>
+                    <div class="custom-file">
+                        <input type="file" name="files" multiple class="custom-file-input" id="new_files">
+                        <label class="custom-file-label" for="new_files">Выберите файлы (JPG/PDF)...</label>
                     </div>
-                    {% endfor %}
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i> Можно выбрать несколько файлов (макс. 10MB каждый)
+                    </small>
                 </div>
-            </div>
-            {% endif %}
 
-            {# Новые файлы для загрузки #}
-            <div class="form-group">
-                <label for="new_files">Добавить файлы:</label>
-                <input type="file" name="files" multiple class="form-control-file" id="new_files">
-                <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> Выберите несколько файлов (JPG/PDF, до 10MB каждый)
-                </small>
-            </div>
-
-            <div class="d-grid gap-2 d-md-block mt-2">
-                <button type="submit" class="btn btn-dark">Обновить статью</button>
-                <a href="{{ article.get_absolute_url }}" class="btn btn-secondary">Отмена</a>
-            </div>
-        </form>
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg mr-2">
+                        <i class="fas fa-save mr-2"></i>Сохранить изменения
+                    </button>
+                    <a href="{{ article.get_absolute_url }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times mr-2"></i>Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+// Скрипт для отображения имен выбранных файлов
+document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+    var files = e.target.files;
+    var label = document.querySelector('.custom-file-label');
+    if (files.length > 1) {
+        label.textContent = files.length + ' файлов выбрано';
+    } else if (files.length === 1) {
+        label.textContent = files[0].name;
+    }
+});
+</script>
 {% endblock %}

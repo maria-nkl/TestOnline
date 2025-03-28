@@ -1,81 +1,154 @@
 {% extends 'main.html' %}
-{% load mptt_tags %}
-{% load humanize %}
 
 {% block content %}
-<div class="card mb-3 border-0 shadow-sm">
-	<div class="row">
-		<div class="col-4">
-			<img src="{{ article.thumbnail.url }}" class="card-img-top" alt="{{ article.title }}" />
-		</div>
-		<div class="col-8">
-			<div class="card-body">
-				<h5>{{ article.title }}</h5>
-				<p class="card-text">{{ article.full_description|safe }}</p>
-				Категория: <a href="{% url 'articles_by_category' article.category.slug %}">{{ article.category.title }}</a> /
-                Добавил: {{ article.author.username }} / <small>{{ article.time_create }}</small>
-			</div>
-		</div>
-	</div>
-	{% if article.tags.all %}
-	<div class="card-footer border-0">
-		Теги записи: {% for tag in article.tags.all %} <a href="{% url 'articles_by_tags' tag.slug %}">{{ tag }}</a>, {% endfor %}
-	</div>
-	{% endif %}
-</div>
-
-<!-- Блок с файлами -->
-<div class="card mb-3 border-0 shadow-sm">
-    <div class="card-body">
-        <h5 class="card-title">
-            <i class="fas fa-paperclip"></i> Прикрепленные файлы
-            <small class="text-muted">({{ article.files.count }})</small>
-        </h5>
-        {% if article.files.all %}
-            <div class="list-group">
-                {% for file in article.files.all %}
-                    <a href="{{ file.file.url }}" target="_blank" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">
-                                <i class="fas {{ file.get_file_icon }} text-primary"></i> {{ file.title }}
-                            </h6>
-                            <small>{{ file.file.size|filesizeformat }}</small>
-                        </div>
-                        <small class="text-muted">{{ file.get_file_type }} файл, загружен {{ file.created_at|naturaltime }}</small>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">{{ article.title }}</h3>
+                {% if article.author == user or user.is_superuser %}
+                <div>
+                    <a href="{% url 'articles_update' article.slug %}" class="btn btn-sm btn-outline-light mr-2">
+                        <i class="fas fa-edit mr-1"></i>Редактировать
                     </a>
-                {% endfor %}
+                    <a href="{% url 'articles_delete' article.slug %}" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash mr-1"></i>Удалить
+                    </a>
+                </div>
+                {% endif %}
             </div>
-        {% else %}
-            <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle"></i> Нет прикрепленных файлов
-            </div>
-        {% endif %}
-    </div>
-</div>
+        </div>
 
-<div class="card border-0">
-	<div class="card-body">
-		<h5 class="card-title">
-			Комментарии
-		</h5>
-		{% include 'blog/comments/comments_list.html' %}
-	</div>
+        <div class="card-body">
+            <div class="media mb-4">
+                <img src="{{ article.thumbnail.url }}" class="mr-3 rounded" width="200" alt="{{ article.title }}">
+                <div class="media-body">
+                    <div class="d-flex flex-wrap mb-2">
+                        <span class="badge badge-primary mr-2 mb-2">
+                            <i class="fas fa-folder mr-1"></i>
+                            {{ article.category.title }}
+                        </span>
+                        {% for tag in article.tags.all %}
+                        <span class="badge badge-secondary mr-2 mb-2">
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ tag.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <div class="text-muted mb-3">
+                        <span class="mr-3">
+                            <i class="fas fa-user mr-1"></i>
+                            {{ article.author.username }}
+                        </span>
+                        <span class="mr-3">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            {{ article.time_create|date:"d.m.Y H:i" }}
+                        </span>
+                        {% if article.time_update > article.time_create %}
+                        <span>
+                            <i class="fas fa-edit mr-1"></i>
+                            Обновлено: {{ article.time_update|date:"d.m.Y H:i" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="content mb-5">
+                {{ article.full_description|safe }}
+            </div>
+
+            {% if article.files.all %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paperclip text-primary mr-2"></i>
+                        Прикрепленные файлы ({{ article.files.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for file in article.files.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas {{ file.get_file_icon }} text-primary mr-2"></i>
+                                {{ file.title }}
+                                <small class="text-muted ml-2">({{ file.get_file_type }}, {{ file.file.size|filesizeformat }})</small>
+                            </div>
+                            <a href="{{ file.file.url }}" class="btn btn-sm btn-outline-primary" download>
+                                <i class="fas fa-download mr-1"></i>Скачать
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <div>
+                    {% if article.status == 'published' %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-check-circle mr-1"></i>Опубликовано
+                    </span>
+                    {% else %}
+                    <span class="badge badge-secondary">
+                        <i class="fas fa-edit mr-1"></i>Черновик
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="social-share">
+                    <!-- Здесь можно добавить кнопки соц. сетей -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок комментариев -->
+    <div class="card shadow mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-comments mr-2"></i>
+                Комментарии
+            </h5>
+        </div>
+        <div class="card-body">
+            {% include 'blog/comments/comments_list.html' %}
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block sidebar %}
-<div class="card mb-2 border-0">
+<div class="card shadow mt-4 mt-md-0">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-star mr-2"></i>
+            Похожие статьи
+        </h5>
+    </div>
     <div class="card-body">
-        <div class="card-title">
-           Похожие статьи
+        {% if similar_articles %}
+        <div class="list-group">
+            {% for sim_article in similar_articles %}
+            <a href="{{ sim_article.get_absolute_url }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ sim_article.title }}</h6>
+                    <small class="text-muted">{{ sim_article.time_create|date:"d.m.Y" }}</small>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-eye mr-1"></i> {{ sim_article.views }} просмотров
+                </small>
+            </a>
+            {% endfor %}
         </div>
-        <div class="card-text">
-            <ul class="similar-articles">
-                {% for sim_article in similar_articles %}
-                    <li><a href="{{ sim_article.get_absolute_url }}">{{ sim_article.title }}</a></li>
-                {% endfor %}
-            </ul>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle mr-2"></i>Нет похожих статей
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
