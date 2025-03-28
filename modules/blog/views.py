@@ -9,7 +9,7 @@ from django.db.models import Count
 from taggit.models import Tag
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
-from .models import Article, Category, Comment
+from .models import Article, Category, Comment, ArticleFile
 from .forms import ArticleCreateForm, ArticleUpdateForm, CommentCreateForm
 from ..services.mixins import AuthorRequiredMixin
 
@@ -98,9 +98,13 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.save()
-        return super().form_valid(form)
+        response = super().form_valid(form)
 
+        files = self.request.FILES.getlist('files')
+        for file in files:
+            ArticleFile.objects.create(article=self.object, file=file)
+
+        return response
 
 class ArticleUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
     """
@@ -117,10 +121,18 @@ class ArticleUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Обновление статьи: {self.object.title}'
         return context
-    
+
     def form_valid(self, form):
-        # form.instance.updater = self.request.user
-        form.save()
+        # Удаление отмеченных файлов
+        if 'delete_files' in form.cleaned_data:
+            for file in form.cleaned_data['delete_files']:
+                file.delete()
+
+        # Добавление новых файлов
+        files = self.request.FILES.getlist('files')
+        for file in files:
+            ArticleFile.objects.create(article=self.object, file=file)
+
         return super().form_valid(form)
 
 

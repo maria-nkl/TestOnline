@@ -9,9 +9,41 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.media }}
+
+            {# Основные поля статьи #}
             {{ form.as_p }}
+
+            {# Блок для удаления существующих файлов #}
+            {% if article.files.all %}
+            <div class="form-group">
+                <label>{{ form.delete_files.label }}</label>
+                <div class="pl-3">
+                    {% for checkbox in form.delete_files %}
+                    <div class="form-check">
+                        {{ checkbox.tag }}
+                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                            <i class="fas {{ checkbox.choice_label.get_file_icon }} mr-2"></i>
+                            {{ checkbox.choice_label.title }}
+                            <small class="text-muted ml-2">({{ checkbox.choice_label.file.size|filesizeformat }})</small>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# Поле для добавления новых файлов #}
+            <div class="form-group">
+                <label>{{ form.files.label }}</label>
+                {{ form.files }}
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> Можно выбрать несколько файлов (JPG/PDF, макс. 10MB каждый)
+                </small>
+            </div>
+
             <div class="d-grid gap-2 d-md-block mt-2">
                 <button type="submit" class="btn btn-dark">Обновить статью</button>
+                <a href="{{ article.get_absolute_url }}" class="btn btn-secondary">Отмена</a>
             </div>
         </form>
     </div>

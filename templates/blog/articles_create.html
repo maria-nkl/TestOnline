@@ -9,9 +9,22 @@
         <form method="post" action="{% url 'articles_create' %}" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.media }}
+
+            {# Основные поля статьи #}
             {{ form.as_p }}
+
+            {# Поле для загрузки файлов #}
+            <div class="form-group">
+                <label>{{ form.files.label }}</label>
+                {{ form.files }}
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> Можно выбрать несколько файлов (JPG/PDF, макс. 10MB каждый)
+                </small>
+            </div>
+
             <div class="d-grid gap-2 d-md-block mt-2">
                 <button type="submit" class="btn btn-dark">Добавить статью</button>
+                <a href="{% url 'home' %}" class="btn btn-secondary">Отмена</a>
             </div>
         </form>
     </div>

@@ -8,7 +8,8 @@ from django_ckeditor_5.fields import CKEditor5Field
 from mptt.models import MPTTModel, TreeForeignKey
 
 from modules.services.utils import unique_slugify
-
+import os
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -157,3 +158,46 @@ class Comment(MPTTModel):
 
     def __str__(self):
         return f'{self.author}:{self.content}'
+
+def validate_file_size(value):
+    filesize = value.size
+    if filesize > 10 * 1024 * 1024:  # 10MB limit
+        raise ValidationError("Максимальный размер файла 10MB")
+
+class ArticleFile(models.Model):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(
+        verbose_name='Файл',
+        upload_to='articles/files/%Y/%m/%d/',
+        validators=[
+            FileExtensionValidator(allowed_extensions=('jpg', 'jpeg', 'pdf')),
+            validate_file_size
+        ]
+    )
+    title = models.CharField(verbose_name='Название файла', max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата загрузки')
+    is_active = models.BooleanField(default=True, verbose_name='Активный')
+
+    class Meta:
+        verbose_name = 'Файл статьи'
+        verbose_name_plural = 'Файлы статей'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title or os.path.basename(self.file.name)
+
+    def save(self, *args, **kwargs):
+        if not self.title:
+            self.title = os.path.basename(self.file.name)
+        super().save(*args, **kwargs)
+
+    def get_file_icon(self):
+        extension = os.path.splitext(self.file.name)[1].lower()
+        if extension in ['.jpg', '.jpeg']:
+            return 'fa-file-image'
+        elif extension == '.pdf':
+            return 'fa-file-pdf'
+        return 'fa-file'
+
+    def get_file_type(self):
+        return os.path.splitext(self.file.name)[1].upper()[1:]

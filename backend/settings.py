@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'taggit',
     # 'django_recaptcha'
     'django_ckeditor_5',
+    'django.contrib.humanize',
 ]
 
 SITE_ID = 1
@@ -93,7 +94,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'App',
+        'NAME': 'course_db',
         'USER': 'postgres',
         'PASSWORD': 'root',
         'HOST': 'localhost',
