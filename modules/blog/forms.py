@@ -9,16 +9,15 @@ class MultipleFileInput(forms.ClearableFileInput):
 
 class MultipleFileField(forms.FileField):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
+        kwargs.setdefault("widget", MultipleFileInput(attrs={'multiple': True}))
         super().__init__(*args, **kwargs)
 
     def clean(self, data, initial=None):
-        single_file_clean = super().clean
+        if data is None:
+            return []
         if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = single_file_clean(data, initial)
-        return result
+            return [super(MultipleFileField, self).clean(d) for d in data]
+        return [super(MultipleFileField, self).clean(data)]
 
 
 class ArticleCreateForm(forms.ModelForm):
@@ -35,37 +34,25 @@ class ArticleCreateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'autocomplete': 'off'
-            })
+            if field != 'files':
+                self.fields[field].widget.attrs.update({
+                    'class': 'form-control',
+                    'autocomplete': 'off'
+                })
 
         self.fields['short_description'].widget.attrs.update({'class': 'form-control django_ckeditor_5'})
         self.fields['full_description'].widget.attrs.update({'class': 'form-control django_ckeditor_5'})
-        self.fields['short_description'].required = False
-        self.fields['full_description'].required = False
-        self.fields['files'].widget.attrs.update({'class': 'form-control'})
+        self.fields['files'].widget.attrs.update({'class': 'form-control-file'})
 
 
 class ArticleUpdateForm(ArticleCreateForm):
-    delete_files = forms.ModelMultipleChoiceField(
-        queryset=None,
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-        label='Удалить файлы'
-    )
-
-    class Meta:
-        model = Article
-        fields = ArticleCreateForm.Meta.fields + ('updater', 'fixed')
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.fields['delete_files'].queryset = self.instance.files.all()
+        if 'fixed' in self.fields:  # Проверяем наличие поля перед обновлением атрибутов
+            self.fields['fixed'].widget.attrs.update({'class': 'form-check-input'})
 
-        self.fields['fixed'].widget.attrs.update({'class': 'form-check-input'})
-        self.fields['delete_files'].widget.attrs.update({'class': 'form-check-input'})
+    class Meta(ArticleCreateForm.Meta):
+        fields = ArticleCreateForm.Meta.fields + ('fixed', 'updater')
 
 
 class CommentCreateForm(forms.ModelForm):

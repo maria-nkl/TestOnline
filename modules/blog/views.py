@@ -13,6 +13,9 @@ from .models import Article, Category, Comment, ArticleFile
 from .forms import ArticleCreateForm, ArticleUpdateForm, CommentCreateForm
 from ..services.mixins import AuthorRequiredMixin
 
+
+
+
 class ArticleListView(ListView):
     model = Article
     template_name = 'blog/articles_list.html'
@@ -80,62 +83,55 @@ class ArticleByTagListView(ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Статьи по тегу: {self.tag.name}'
         return context
-    
+
 
 class ArticleCreateView(LoginRequiredMixin, CreateView):
-    """
-    Представление: создание материалов на сайте
-    """
     model = Article
     template_name = 'blog/articles_create.html'
     form_class = ArticleCreateForm
     login_url = 'home'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавление статьи на сайт'
-        return context
-
     def form_valid(self, form):
         form.instance.author = self.request.user
         response = super().form_valid(form)
 
-        files = self.request.FILES.getlist('files')
-        for file in files:
+        # Handle multiple file uploads
+        for file in self.request.FILES.getlist('files'):
             ArticleFile.objects.create(article=self.object, file=file)
 
         return response
 
+
 class ArticleUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
-    """
-    Представление: обновления материала на сайте
-    """
     model = Article
     template_name = 'blog/articles_update.html'
-    context_object_name = 'article'
     form_class = ArticleUpdateForm
-    login_url = 'home'
     success_message = 'Материал был успешно обновлен'
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = f'Обновление статьи: {self.object.title}'
-        return context
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['instance'] = self.get_object()
+        if 'updater' in self.get_form_class().Meta.fields:
+            kwargs['initial'] = {'updater': self.request.user}
+        return kwargs
 
     def form_valid(self, form):
-        # Удаление отмеченных файлов
-        if 'delete_files' in form.cleaned_data:
-            for file in form.cleaned_data['delete_files']:
-                file.delete()
+        # Handle file deletion
+        if 'delete_files' in self.request.POST:
+            ArticleFile.objects.filter(
+                id__in=self.request.POST.getlist('delete_files'),
+                article=self.object
+            ).delete()
 
-        # Добавление новых файлов
-        files = self.request.FILES.getlist('files')
-        for file in files:
+        # Handle new file uploads
+        for file in self.request.FILES.getlist('files'):
             ArticleFile.objects.create(article=self.object, file=file)
 
+        # Update updater field if it exists
+        if 'updater' in form.fields:
+            form.instance.updater = self.request.user
+
         return super().form_valid(form)
-
-
 class ArticleDeleteView(AuthorRequiredMixin, DeleteView):
     """
     Представление: удаления материала

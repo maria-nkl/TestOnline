@@ -11,14 +11,47 @@
             {{ form.media }}
 
             {# Основные поля статьи #}
-            {{ form.as_p }}
+            <div class="form-group">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+            </div>
+
+            <div class="form-group">
+                {{ form.slug.label_tag }}
+                {{ form.slug }}
+            </div>
+
+            <div class="form-group">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+            </div>
+
+            <div class="form-group">
+                {{ form.short_description.label_tag }}
+                {{ form.short_description }}
+            </div>
+
+            <div class="form-group">
+                {{ form.full_description.label_tag }}
+                {{ form.full_description }}
+            </div>
+
+            <div class="form-group">
+                {{ form.thumbnail.label_tag }}
+                {{ form.thumbnail }}
+            </div>
+
+            <div class="form-group">
+                {{ form.status.label_tag }}
+                {{ form.status }}
+            </div>
 
             {# Поле для загрузки файлов #}
             <div class="form-group">
-                <label>{{ form.files.label }}</label>
-                {{ form.files }}
+                <label for="id_files">Прикрепить файлы:</label>
+                <input type="file" name="files" multiple class="form-control-file" id="id_files">
                 <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> Можно выбрать несколько файлов (JPG/PDF, макс. 10MB каждый)
+                    <i class="fas fa-info-circle"></i> Выберите несколько файлов (JPG/PDF, до 10MB каждый)
                 </small>
             </div>
 

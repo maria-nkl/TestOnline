@@ -11,20 +11,31 @@
             {{ form.media }}
 
             {# Основные поля статьи #}
-            {{ form.as_p }}
+            {% for field in form %}
+                {% if field.name not in 'files delete_files' %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
 
-            {# Блок для удаления существующих файлов #}
+            {# Существующие файлы для удаления #}
             {% if article.files.all %}
             <div class="form-group">
-                <label>{{ form.delete_files.label }}</label>
+                <label>Удалить файлы:</label>
                 <div class="pl-3">
-                    {% for checkbox in form.delete_files %}
+                    {% for file in article.files.all %}
                     <div class="form-check">
-                        {{ checkbox.tag }}
-                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                            <i class="fas {{ checkbox.choice_label.get_file_icon }} mr-2"></i>
-                            {{ checkbox.choice_label.title }}
-                            <small class="text-muted ml-2">({{ checkbox.choice_label.file.size|filesizeformat }})</small>
+                        <input type="checkbox" name="delete_files" value="{{ file.id }}"
+                               class="form-check-input" id="delete_file_{{ file.id }}">
+                        <label class="form-check-label" for="delete_file_{{ file.id }}">
+                            <i class="fas {{ file.get_file_icon }} mr-2"></i>
+                            {{ file.title }}
+                            <small class="text-muted ml-2">({{ file.file.size|filesizeformat }})</small>
                         </label>
                     </div>
                     {% endfor %}
@@ -32,12 +43,12 @@
             </div>
             {% endif %}
 
-            {# Поле для добавления новых файлов #}
+            {# Новые файлы для загрузки #}
             <div class="form-group">
-                <label>{{ form.files.label }}</label>
-                {{ form.files }}
+                <label for="new_files">Добавить файлы:</label>
+                <input type="file" name="files" multiple class="form-control-file" id="new_files">
                 <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> Можно выбрать несколько файлов (JPG/PDF, макс. 10MB каждый)
+                    <i class="fas fa-info-circle"></i> Выберите несколько файлов (JPG/PDF, до 10MB каждый)
                 </small>
             </div>
 

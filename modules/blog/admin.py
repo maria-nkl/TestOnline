@@ -13,15 +13,14 @@ class ArticleFileForm(forms.ModelForm):
 
 class ArticleFileInline(admin.TabularInline):
     model = ArticleFile
-    form = ArticleFileForm
     extra = 1
     fields = ('file', 'title', 'file_link', 'created_at', 'is_active')
-    readonly_fields = ('created_at', 'file_link')
+    readonly_fields = ('file_link', 'created_at')
 
     def file_link(self, obj):
         if obj.file:
             return format_html(
-                '<a href="{0}" target="_blank"><i class="fas {1}"></i> Скачать</a>',
+                '<a href="{}" target="_blank"><i class="fas {}"></i> Скачать</a>',
                 obj.file.url,
                 obj.get_file_icon()
             )
@@ -39,9 +38,8 @@ class CategoryAdmin(DraggableMPTTAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'slug': ('title',)}
     inlines = [ArticleFileInline]
-    list_display = ('title', 'author', 'time_create', 'status', 'files_count')
+    list_display = ('title', 'author', 'category', 'status', 'files_count')
 
     def files_count(self, obj):
         return obj.files.count()
@@ -63,7 +61,6 @@ class ArticleFileAdmin(admin.ModelAdmin):
     list_display = ('title', 'article_link', 'file_type', 'created_at', 'is_active')
     list_filter = ('created_at', 'is_active')
     search_fields = ('title', 'article__title')
-    list_editable = ('is_active',)
 
     def article_link(self, obj):
         return format_html('<a href="{}">{}</a>', obj.article.get_absolute_url(), obj.article.title)
