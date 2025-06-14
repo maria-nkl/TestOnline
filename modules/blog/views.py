@@ -85,23 +85,6 @@ class ArticleByTagListView(ListView):
         return context
 
 
-class ArticleCreateView(LoginRequiredMixin, CreateView):
-    model = Article
-    template_name = 'blog/articles_create.html'
-    form_class = ArticleCreateForm
-    login_url = 'home'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        response = super().form_valid(form)
-
-        # Handle multiple file uploads
-        for file in self.request.FILES.getlist('files'):
-            ArticleFile.objects.create(article=self.object, file=file)
-
-        return response
-
-
 class ArticleUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Article
     template_name = 'blog/articles_update.html'
@@ -204,3 +187,27 @@ class ArticleSearchResultView(ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Результаты поиска: {self.request.GET.get("do")}'
         return context
+
+
+# modules/blog/views.py
+from django.views.generic import CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Article
+from .forms import ArticleCreateForm
+
+class ArticleCreateView(LoginRequiredMixin, CreateView):
+    model = Article
+    form_class = ArticleCreateForm
+    template_name = 'blog/articles_create.html'
+    login_url = 'home'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
+        
+        # Обработка загруженных файлов
+        for file in self.request.FILES.getlist('files'):
+            ArticleFile.objects.create(article=self.object, file=file)
+            # Обработка происходит автоматически в методе save() модели
+            
+        return response

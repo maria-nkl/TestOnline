@@ -76,7 +76,7 @@ class Article(models.Model):
     
     def get_absolute_url(self):
         return reverse('articles_detail', kwargs={'slug': self.slug})
-    
+
     def save(self, *args, **kwargs):
         """
         Сохранение полей модели при их отсутствии заполнения
@@ -84,7 +84,6 @@ class Article(models.Model):
         if not self.slug:
             self.slug = unique_slugify(self, self.title)
         super().save(*args, **kwargs)
-    
 
 
 class Category(MPTTModel):
@@ -159,13 +158,24 @@ class Comment(MPTTModel):
     def __str__(self):
         return f'{self.author}:{self.content}'
 
+
+# modules/blog/models.py
+import os
+from django.db import models
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+from .image_processor import ImageProcessor
+import logging
+
+logger = logging.getLogger(__name__)
+
 def validate_file_size(value):
     filesize = value.size
-    if filesize > 10 * 1024 * 1024:  # 10MB limit
+    if filesize > 10 * 1024 * 1024:
         raise ValidationError("Максимальный размер файла 10MB")
 
 class ArticleFile(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='files')
+    article = models.ForeignKey('Article', on_delete=models.CASCADE, related_name='files')
     file = models.FileField(
         verbose_name='Файл',
         upload_to='articles/files/%Y/%m/%d/',
@@ -178,26 +188,38 @@ class ArticleFile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата загрузки')
     is_active = models.BooleanField(default=True, verbose_name='Активный')
 
-    class Meta:
-        verbose_name = 'Файл статьи'
-        verbose_name_plural = 'Файлы статей'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return self.title or os.path.basename(self.file.name)
-
     def save(self, *args, **kwargs):
         if not self.title:
             self.title = os.path.basename(self.file.name)
         super().save(*args, **kwargs)
+        
+        # Обработка изображения после сохранения
+        if self.file.name.lower().endswith(('.jpg', '.jpeg')):
+            self.process_image()
 
-    def get_file_icon(self):
-        extension = os.path.splitext(self.file.name)[1].lower()
-        if extension in ['.jpg', '.jpeg']:
-            return 'fa-file-image'
-        elif extension == '.pdf':
-            return 'fa-file-pdf'
-        return 'fa-file'
-
+    def process_image(self):
+        try:
+            processor = ImageProcessor()
+            results_text = processor.process_uploaded_image(self.file.path)
+            
+            # Удаляем старые результаты если есть (ищет по эмодзи-маркеру)
+            content = self.article.full_description
+            if "## 📊 Результаты обработки шаблонов" in content:
+                content = content.split("## 📊 Результаты обработки шаблонов")[0].strip()
+            
+            # Добавляем новые результаты с эмодзи
+            self.article.full_description = f"{content}\n\n{results_text}"
+            self.article.save()
+            
+        except Exception as e:
+            logger.error(f"🛑 Ошибка обработки: {str(e)}")
     def get_file_type(self):
-        return os.path.splitext(self.file.name)[1].upper()[1:]
+        ext = os.path.splitext(self.file.name)[1].lower()
+        if ext in ['.jpg', '.jpeg']:
+            return 'Изображение'
+        elif ext == '.pdf':
+            return 'PDF'
+        return 'Другой'
+
+    def __str__(self):
+        return self.title or os.path.basename(self.file.name)

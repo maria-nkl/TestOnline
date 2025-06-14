@@ -145,6 +145,21 @@ STATICFILES_DIRS = [BASE_DIR / 'templates/src']
 MEDIA_ROOT = (BASE_DIR / 'media')
 MEDIA_URL = '/media/'
 
+MODEL_PATH = (BASE_DIR / 'best_model.pth')
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'modules.blog': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
