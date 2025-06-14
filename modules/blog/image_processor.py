@@ -10,6 +10,8 @@ from torchvision.models import resnet18
 from django.conf import settings
 import logging
 from typing import Tuple, List, Dict, Optional  # Добавляем необходимые импорты типов
+import shutil  # Добавляем в импорты
+
 
 logger = logging.getLogger(__name__)
 
@@ -93,60 +95,6 @@ class ImageProcessor:
         
         result += "</div>"
         return result
-    
-    def process_uploaded_image(self, image_path: str) -> Dict:
-        """
-        Основной метод для обработки загруженного изображения.
-        Возвращает словарь с результатами обработки или ошибкой.
-        """
-        try:
-            # Создаем уникальные папки для каждого изображения
-            base_name = os.path.splitext(os.path.basename(image_path))[0]
-            session_dir = os.path.join(self.base_output_dir, base_name)
-            
-            output_norm_folder = os.path.join(session_dir, 'normalized')
-            output_rectangles_folder = os.path.join(session_dir, 'rectangles')
-            output_squares_folder = os.path.join(session_dir, 'squares')
-            
-            os.makedirs(output_norm_folder, exist_ok=True)
-            os.makedirs(output_rectangles_folder, exist_ok=True)
-            os.makedirs(output_squares_folder, exist_ok=True)
-
-            # 1. Загрузка и предварительная обработка
-            image, gray = self._load_and_preprocess_image(image_path)
-
-            # 2. Поиск маркеров
-            markers = self._find_markers(gray)
-            if len(markers) != 4:
-                return {"error": f"Найдено {len(markers)} маркеров (требуется 4)"}
-
-            # 3. Нормализация изображения
-            norm_output_path = os.path.join(output_norm_folder, f"{base_name}_norm.jpg")
-            normalized = self._normalize_image(image, markers, norm_output_path)
-            if normalized is None:
-                return {"error": "Невозможно выполнить нормализацию"}
-
-            # 4. Извлечение прямоугольников
-            rectangles = self._extract_numbered_rectangles(
-                norm_output_path,
-                output_rectangles_folder
-            )
-
-            # 5. Обработка прямоугольников для поиска квадратов
-            squares_data = self._process_squares(
-                output_rectangles_folder,
-                output_squares_folder
-            )
-
-            # Формируем относительные пути для хранения в БД
-            rel_path = lambda p: os.path.relpath(p, settings.MEDIA_ROOT)
-
-            
-            return self.format_processing_results(squares_data)
-        
-        except Exception as e:
-            logger.error(f"Ошибка обработки изображения {image_path}: {str(e)}")
-            return f"## ❌ Ошибка обработки\n\n🛑 Произошла ошибка: {str(e)}"
     
 
     def _load_and_preprocess_image(self, image_path: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -410,3 +358,197 @@ class ImageProcessor:
         except Exception as e:
             logger.error(f"Ошибка предсказания для {image_path}: {str(e)}")
             return 0
+        
+    def process_uploaded_image(self, image_path: str) -> Dict:
+        """
+        Основной метод для обработки загруженного изображения.
+        Возвращает словарь с результатами обработки.
+        """
+        try:
+            # Создаем уникальные папки для каждого изображения
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            session_dir = os.path.join(self.base_output_dir, base_name)
+            
+            output_norm_folder = os.path.join(session_dir, 'normalized')
+            output_rectangles_folder = os.path.join(session_dir, 'rectangles')
+            output_squares_folder = os.path.join(session_dir, 'squares')
+            
+            os.makedirs(output_norm_folder, exist_ok=True)
+            os.makedirs(output_rectangles_folder, exist_ok=True)
+            os.makedirs(output_squares_folder, exist_ok=True)
+
+            # 1. Загрузка и предварительная обработка
+            image, gray = self._load_and_preprocess_image(image_path)
+
+            # 2. Поиск маркеров
+            markers = self._find_markers(gray)
+            if len(markers) != 4:
+                return {"error": f"Найдено {len(markers)} маркеров (требуется 4)"}
+
+            # 3. Нормализация изображения
+            norm_output_path = os.path.join(output_norm_folder, f"{base_name}_norm.jpg")
+            normalized = self._normalize_image(image, markers, norm_output_path)
+            if normalized is None:
+                return {"error": "Невозможно выполнить нормализацию"}
+
+            # 4. Извлечение прямоугольников
+            rectangles = self._extract_numbered_rectangles(
+                norm_output_path,
+                output_rectangles_folder
+            )
+
+            # 5. Обработка прямоугольников для поиска квадратов
+            squares_data = self._process_squares(
+                output_rectangles_folder,
+                output_squares_folder
+            )
+
+            return {
+                "success": True,
+                "raw_data": squares_data,
+                "formatted_html": self.format_processing_results(squares_data)
+            }
+        
+        except Exception as e:
+            logger.error(f"Ошибка обработки изображения {image_path}: {str(e)}")
+            return {"error": str(e)}
+        
+        finally:
+        # Всегда очищаем промежуточные файлы после обработки
+            if session_dir:
+                self._cleanup_processing_files(session_dir)
+
+    # def compare_with_reference(self, reference_data, current_data):
+    #     """
+    #     Сравнивает текущие данные с эталонными и возвращает разметку с различиями.
+    #     """
+    #     comparison_results = {}
+        
+    #     # Если reference_data - это результат process_uploaded_image, извлекаем raw_data
+    #     ref_data = reference_data.get('raw_data', {}) if isinstance(reference_data, dict) else {}
+    #     curr_data = current_data.get('raw_data', {}) if isinstance(current_data, dict) else {}
+    #     print("!!! ref_data-",ref_data)
+    #     print("!!! curr_data-",curr_data)
+
+    #     for template, questions in curr_data.items():
+    #         comparison_results[template] = {}
+            
+    #         for question, answers in questions.items():
+    #             comparison_results[template][question] = {}
+                
+    #             # Получаем эталонные ответы для этого вопроса
+    #             ref_answers = ref_data.get(template, {}).get(question, {})
+                
+    #             for answer, status in answers.items():
+    #                 # Проверяем, есть ли этот ответ в эталоне
+    #                 if answer in ref_answers:
+    #                     comparison_results[template][question][answer] = "correct"
+    #                 else:
+    #                     comparison_results[template][question][answer] = "incorrect"
+    #     print("!!!",comparison_results)
+    #     return comparison_results
+
+
+    def compare_with_reference(self, reference_data, current_data):
+        """
+        Сравнивает ответы на одинаковые вопросы между разными шаблонами.
+        Ответ считается правильным, если он совпадает с эталоном для того же вопроса.
+        """
+        comparison_results = {}
+        
+        # Извлекаем raw_data из входных данных
+        ref_data = reference_data.get('raw_data', {}) if isinstance(reference_data, dict) else {}
+        curr_data = current_data.get('raw_data', {}) if isinstance(current_data, dict) else {}
+        
+        print("!!! ref_data-", ref_data)
+        print("!!! curr_data-", curr_data)
+        
+        # Если нет эталонных данных, возвращаем все как incorrect
+        if not ref_data:
+            print("Предупреждение: Эталонные данные отсутствуют")
+            return self._mark_all_as_incorrect(curr_data)
+        
+        # Берем первый эталонный шаблон (предполагаем, что там один шаблон)
+        ref_template, ref_questions = next(iter(ref_data.items())) if ref_data else (None, {})
+        
+        for curr_template, curr_questions in curr_data.items():
+            comparison_results[curr_template] = {}
+            
+            for question, answers in curr_questions.items():
+                comparison_results[curr_template][question] = {}
+                
+                # Получаем эталонные ответы для этого вопроса (из любого шаблона)
+                ref_answers = ref_questions.get(question, {})
+                
+                for answer, status in answers.items():
+                    # Ответ правильный, если такой же ответ есть для этого вопроса в эталоне
+                    if answer in ref_answers:
+                        comparison_results[curr_template][question][answer] = "correct"
+                    else:
+                        comparison_results[curr_template][question][answer] = "incorrect"
+        
+        print("!!! comparison_results-", comparison_results)
+        return comparison_results
+
+
+    def format_comparison_results(self, comparison_data):
+        """
+        Форматирует результаты сравнения в HTML с цветовой разметкой.
+        """
+        result = """
+        <div style='font-family: monospace; max-width: 500px;'>
+        <h3 style='color: #2c3e50; margin-bottom: 10px;'>📊 Результаты проверки</h3>
+        <p style='color: #6c757d; margin-bottom: 15px;'>
+            <span style='color: #28a745;'>✓</span> - соответствует эталону<br>
+            <span style='color: #dc3545;'>✗</span> - не соответствует эталону
+        </p>
+        """
+        
+        for template, questions in comparison_data.items():
+            result += f"""
+            <div style='margin-bottom: 25px;'>
+                <h4 style='color: #3498db; margin: 5px 0;'>📋 Шаблон: {template}</h4>
+                <table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
+                    <thead>
+                        <tr style='background-color: #f8f9fa;'>
+                            <th style='padding: 6px; border: 1px solid #dee2e6; text-align: center; width: 30%;'>Вопрос №</th>
+                            <th style='padding: 6px; border: 1px solid #dee2e6; text-align: center; width: 30%;'>Отметки</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """
+            
+            for question, answers in sorted(questions.items(), key=lambda x: int(x[0])):
+                marks = []
+                for answer, status in sorted(answers.items()):
+                    if status == "correct":
+                        marks.append(f"<span style='color: #28a745;'>✓{answer}</span>")
+                    else:
+                        marks.append(f"<span style='color: #dc3545;'>✗{answer}</span>")
+                
+                marks_str = " ".join(marks) if marks else "<span style='color: #6c757d;'>нет отметок</span>"
+                
+                result += f"""
+                    <tr>
+                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{question}</td>
+                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{marks_str}</td>
+                    </tr>
+                """
+            
+            result += """
+                    </tbody>
+                </table>
+            </div>
+            """
+        
+        result += "</div>"
+        return result
+    
+    def _cleanup_processing_files(self, session_dir: str):
+        """Удаляет все промежуточные файлы после обработки"""
+        try:
+            if os.path.exists(session_dir):
+                shutil.rmtree(session_dir)
+                logger.info(f"Удалена папка с промежуточными файлами: {session_dir}")
+        except Exception as e:
+            logger.error(f"Ошибка при удалении промежуточных файлов: {str(e)}")

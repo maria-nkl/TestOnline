@@ -197,22 +197,69 @@ class ArticleFile(models.Model):
         if self.file.name.lower().endswith(('.jpg', '.jpeg')):
             self.process_image()
 
+    # def process_image(self):
+        # try:
+        #     processor = ImageProcessor()
+        #     results_text = processor.process_uploaded_image(self.file.path)
+            
+        #     # Удаляем старые результаты если есть (ищет по эмодзи-маркеру)
+        #     content = self.article.full_description
+        #     if "## 📊 Результаты обработки шаблонов" in content:
+        #         content = content.split("## 📊 Результаты обработки шаблонов")[0].strip()
+            
+        #     # Добавляем новые результаты с эмодзи
+        #     self.article.full_description = f"{content}\n\n{results_text}"
+        #     self.article.save()
+            
+        # except Exception as e:
+        #     logger.error(f"🛑 Ошибка обработки: {str(e)}")
     def process_image(self):
         try:
             processor = ImageProcessor()
-            results_text = processor.process_uploaded_image(self.file.path)
             
-            # Удаляем старые результаты если есть (ищет по эмодзи-маркеру)
+            # 1. Обрабатываем текущее изображение
+            current_results = processor.process_uploaded_image(self.file.path)
+            if 'error' in current_results:
+                raise ValueError(current_results['error'])
+            
+            # 2. Получаем и обрабатываем эталон (превью статьи)
+            reference_results = None
+            if self.article.thumbnail:
+                try:
+                    
+                    reference_results = processor.process_uploaded_image(self.article.thumbnail.path)
+                    print("!!!!!!!!", reference_results['raw_data'])
+                    if 'error' in reference_results:
+                        logger.warning(f"Ошибка обработки эталонного изображения: {reference_results['error']}")
+                        reference_results = None
+                except Exception as e:
+                    logger.warning(f"Не удалось обработать эталонное изображение: {str(e)}")
+            
+            # 3. Формируем результаты
+            if reference_results:
+                comparison_data = processor.compare_with_reference(
+                    reference_results, 
+                    current_results
+                )
+                results_text = processor.format_comparison_results(comparison_data)
+            else:
+                results_text = current_results.get('formatted_html', '')
+            
+            # 4. Обновляем описание статьи
             content = self.article.full_description
-            if "## 📊 Результаты обработки шаблонов" in content:
-                content = content.split("## 📊 Результаты обработки шаблонов")[0].strip()
+            if "## 📊 Результаты проверки" in content or "## 📊 Результаты обработки шаблонов" in content:
+                # Удаляем старые результаты если есть
+                content = content.split("## 📊")[0].strip()
             
-            # Добавляем новые результаты с эмодзи
             self.article.full_description = f"{content}\n\n{results_text}"
             self.article.save()
             
         except Exception as e:
             logger.error(f"🛑 Ошибка обработки: {str(e)}")
+            raise
+    
+    
+    
     def get_file_type(self):
         ext = os.path.splitext(self.file.name)[1].lower()
         if ext in ['.jpg', '.jpeg']:
