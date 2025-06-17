@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-header bg-dark text-white">
-            <h4 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>Добавление новой статьи</h4>
+            <h4 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>Добавление новой контрольной</h4>
         </div>
         <div class="card-body">
             <form method="post" action="{% url 'articles_create' %}" enctype="multipart/form-data">
@@ -14,7 +14,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-bold">Заголовок статьи</label>
+                            <label class="font-weight-bold">Заголовок</label>
                             {{ form.title }}
                         </div>
                     </div>
@@ -45,7 +45,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-bold">Превью изображение</label>
+                            <label class="font-weight-bold">Правильные ответы</label>
                             {{ form.thumbnail }}
                         </div>
                     </div>
@@ -70,7 +70,7 @@
 
                 <div class="form-group mt-4">
                     <button type="submit" class="btn btn-primary btn-lg mr-2">
-                        <i class="fas fa-save mr-2"></i>Сохранить статью
+                        <i class="fas fa-save mr-2"></i>Отправить на проверку
                     </button>
                     <a href="{% url 'home' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-times mr-2"></i>Отмена

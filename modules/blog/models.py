@@ -49,7 +49,7 @@ class Article(models.Model):
     short_description = CKEditor5Field(max_length=500, verbose_name='Краткое описание', config_name='extends')
     full_description = CKEditor5Field(verbose_name='Полное описание', config_name='extends')
     thumbnail = models.ImageField(
-        verbose_name='Превью поста', 
+        verbose_name='Эталон', 
         blank=True, 
         upload_to='images/thumbnails/%Y/%m/%d/', 
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))]
@@ -226,7 +226,7 @@ class ArticleFile(models.Model):
             reference_results = None
             if self.article.thumbnail:
                 try:
-                    
+
                     reference_results = processor.process_uploaded_image(self.article.thumbnail.path)
                     print("!!!!!!!!", reference_results['raw_data'])
                     if 'error' in reference_results:

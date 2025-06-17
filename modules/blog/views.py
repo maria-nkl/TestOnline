@@ -16,17 +16,37 @@ from ..services.mixins import AuthorRequiredMixin
 
 
 
+# class ArticleListView(ListView):
+#     model = Article
+#     template_name = 'blog/articles_list.html'
+#     context_object_name = 'articles'
+#     paginate_by = 2
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['title'] = 'Главная страница'
+#         return context
+
+
 class ArticleListView(ListView):
     model = Article
     template_name = 'blog/articles_list.html'
     context_object_name = 'articles'
-    paginate_by = 2
+    paginate_by = 10
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Article.objects.filter(author=self.request.user)\
+                                 .select_related('author', 'category')\
+                                 .prefetch_related('tags')\
+                                 .order_by('-fixed', '-time_create')
+        return Article.objects.none()  # Возвращаем пустой queryset для неавторизованных
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Главная страница'
+        context['title'] = 'Мои работы' if self.request.user.is_authenticated else 'Доступ к работам'
+        context['user_authenticated'] = self.request.user.is_authenticated
         return context
-    
 
 class ArticleDetailView(DetailView):
     model = Article

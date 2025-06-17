@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(blank=True, max_length=255, unique=True, verbose_name='URL')),
                 ('short_description', models.TextField(max_length=500, verbose_name='Краткое описание')),
                 ('full_description', models.TextField(verbose_name='Полное описание')),
-                ('thumbnail', models.ImageField(blank=True, upload_to='images/thumbnails/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))], verbose_name='Превью поста')),
+                ('thumbnail', models.ImageField(blank=True, upload_to='images/thumbnails/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))], verbose_name='Эталон')),
                 ('status', models.CharField(choices=[('published', 'Опубликовано'), ('draft', 'Черновик')], default='published', max_length=10, verbose_name='Статус поста')),
                 ('time_create', models.DateTimeField(auto_now_add=True, verbose_name='Время добавления')),
                 ('time_update', models.DateTimeField(auto_now=True, verbose_name='Время обновления')),

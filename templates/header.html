@@ -16,7 +16,14 @@
           <li>
             <a href="{% url "articles_create" %}" class="nav-link text-white">
               <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#speedometer2"></use></svg>
-              Добавить статью
+              Добавить работу на проверку
+            </a>
+          </li>
+          <!-- Новая кнопка для скачивания шаблона -->
+          <li>
+            <a href="/media/static_files/blank_template.pdf" class="nav-link text-white" download>
+              <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#file-earmark-text"></use></svg>
+              Скачать бланк
             </a>
           </li>
         </ul>
@@ -31,10 +38,10 @@
       </form>
       {% if request.user.is_authenticated %}
         <a href="{% url "profile_detail" request.user.profile.slug %}" type="button" class="btn btn-secondary me-2"> {{ request.user.username }}</a>
-        <a href="{% url "logout" %}" type="button" class="btn btn-primary">Деавторизация</a>
+        <a href="{% url "logout" %}" type="button" class="btn btn-primary">Выйти</a>
       {% else %}
       <div class="text-end">
-        <a href="{% url "login" %}" type="button" class="btn btn-light text-dark me-2">Авторизация</a>
+        <a href="{% url "login" %}" type="button" class="btn btn-light text-dark me-2">Войти</a>
         <a href="{% url "register" %}" type="button" class="btn btn-primary">Регистрация</a>
       </div>
       {% endif %}

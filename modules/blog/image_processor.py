@@ -418,36 +418,6 @@ class ImageProcessor:
             if session_dir:
                 self._cleanup_processing_files(session_dir)
 
-    # def compare_with_reference(self, reference_data, current_data):
-    #     """
-    #     Сравнивает текущие данные с эталонными и возвращает разметку с различиями.
-    #     """
-    #     comparison_results = {}
-        
-    #     # Если reference_data - это результат process_uploaded_image, извлекаем raw_data
-    #     ref_data = reference_data.get('raw_data', {}) if isinstance(reference_data, dict) else {}
-    #     curr_data = current_data.get('raw_data', {}) if isinstance(current_data, dict) else {}
-    #     print("!!! ref_data-",ref_data)
-    #     print("!!! curr_data-",curr_data)
-
-    #     for template, questions in curr_data.items():
-    #         comparison_results[template] = {}
-            
-    #         for question, answers in questions.items():
-    #             comparison_results[template][question] = {}
-                
-    #             # Получаем эталонные ответы для этого вопроса
-    #             ref_answers = ref_data.get(template, {}).get(question, {})
-                
-    #             for answer, status in answers.items():
-    #                 # Проверяем, есть ли этот ответ в эталоне
-    #                 if answer in ref_answers:
-    #                     comparison_results[template][question][answer] = "correct"
-    #                 else:
-    #                     comparison_results[template][question][answer] = "incorrect"
-    #     print("!!!",comparison_results)
-    #     return comparison_results
-
 
     def compare_with_reference(self, reference_data, current_data):
         """
@@ -489,25 +459,56 @@ class ImageProcessor:
         
         print("!!! comparison_results-", comparison_results)
         return comparison_results
-
+    
 
     def format_comparison_results(self, comparison_data):
         """
-        Форматирует результаты сравнения в HTML с цветовой разметкой.
+        Форматирует результаты сравнения в HTML с цветовой разметкой и статистикой.
         """
         result = """
         <div style='font-family: monospace; max-width: 500px;'>
         <h3 style='color: #2c3e50; margin-bottom: 10px;'>📊 Результаты проверки</h3>
         <p style='color: #6c757d; margin-bottom: 15px;'>
-            <span style='color: #28a745;'>✓</span> - соответствует эталону<br>
-            <span style='color: #dc3545;'>✗</span> - не соответствует эталону
+            <span style='color: #28a745; font-weight: 600;'>✓</span> - верный ответ<br>
+            <span style='color: #dc3545; font-weight: 600;'>✗</span> - неверный ответ
         </p>
         """
         
         for template, questions in comparison_data.items():
+            # Счетчики для статистики по шаблону
+            correct_count = 0
+            incorrect_count = 0
+            
+            # Собираем строки таблицы и считаем ответы
+            question_rows = []
+            for question, answers in sorted(questions.items(), key=lambda x: int(x[0])):
+                marks = []
+                for answer, status in sorted(answers.items()):
+                    if status == "correct":
+                        marks.append(f"<span style='color: #28a745; font-weight: 600;'>✓{answer}</span>")
+                        correct_count += 1
+                    else:
+                        marks.append(f"<span style='color: #dc3545; font-weight: 600;'>✗{answer}</span>")
+                        incorrect_count += 1
+                
+                marks_str = " ".join(marks) if marks else "<span style='color: #6c757d;'>нет отметок</span>"
+                
+                question_rows.append(f"""
+                    <tr>
+                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{question}</td>
+                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{marks_str}</td>
+                    </tr>
+                """)
+            
+            # Статистика по шаблону
+            total_answers = correct_count + incorrect_count
+            correct_percent = (correct_count / total_answers * 100) if total_answers > 0 else 0
+            
             result += f"""
             <div style='margin-bottom: 25px;'>
-                <h4 style='color: #3498db; margin: 5px 0;'>📋 Шаблон: {template}</h4>
+                <h4 style='color: #3498db; margin: 5px 0;'>
+                    📋 Проверочная работа: {template}
+                </h4>
                 <table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
                     <thead>
                         <tr style='background-color: #f8f9fa;'>
@@ -516,27 +517,17 @@ class ImageProcessor:
                         </tr>
                     </thead>
                     <tbody>
-            """
-            
-            for question, answers in sorted(questions.items(), key=lambda x: int(x[0])):
-                marks = []
-                for answer, status in sorted(answers.items()):
-                    if status == "correct":
-                        marks.append(f"<span style='color: #28a745;'>✓{answer}</span>")
-                    else:
-                        marks.append(f"<span style='color: #dc3545;'>✗{answer}</span>")
-                
-                marks_str = " ".join(marks) if marks else "<span style='color: #6c757d;'>нет отметок</span>"
-                
-                result += f"""
-                    <tr>
-                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{question}</td>
-                        <td style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>{marks_str}</td>
-                    </tr>
-                """
-            
-            result += """
+                        {''.join(question_rows)}
                     </tbody>
+                    <tfoot>
+                        <tr style='background-color: #f8f9fa;'>
+                            <td colspan='2' style='padding: 6px; border: 1px solid #dee2e6; text-align: center;'>
+                                <span style='color: #28a745; font-weight: 600;'>✓ Правильно: {correct_count}</span> | 
+                                <span style='color: #dc3545; font-weight: 600;'>✗ Ошибки: {incorrect_count}</span> | 
+                                <span style='font-weight: 600;'>Точность: {correct_percent:.1f}%</span>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             """

@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-header bg-dark text-white">
-            <h4 class="mb-0"><i class="fas fa-edit mr-2"></i>Редактирование статьи: {{ article.title }}</h4>
+            <h4 class="mb-0"><i class="fas fa-edit mr-2"></i>Редактирование: {{ article.title }}</h4>
         </div>
         <div class="card-body">
             <form method="post" enctype="multipart/form-data">
@@ -14,7 +14,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-bold">Заголовок статьи</label>
+                            <label class="font-weight-bold">Заголовок</label>
                             {{ form.title }}
                         </div>
                     </div>
@@ -44,7 +44,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-bold">Превью изображение</label>
+                            <label class="font-weight-bold">Правильные ответы</label>
                             {{ form.thumbnail }}
                             {% if article.thumbnail %}
                                 <div class="mt-2">

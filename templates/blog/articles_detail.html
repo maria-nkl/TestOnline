@@ -119,35 +119,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block sidebar %}
-<div class="card shadow mt-4 mt-md-0">
-    <div class="card-header bg-dark text-white">
-        <h5 class="mb-0">
-            <i class="fas fa-star mr-2"></i>
-            Похожие статьи
-        </h5>
-    </div>
-    <div class="card-body">
-        {% if similar_articles %}
-        <div class="list-group">
-            {% for sim_article in similar_articles %}
-            <a href="{{ sim_article.get_absolute_url }}" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">{{ sim_article.title }}</h6>
-                    <small class="text-muted">{{ sim_article.time_create|date:"d.m.Y" }}</small>
-                </div>
-                <small class="text-muted">
-                    <i class="fas fa-eye mr-1"></i> {{ sim_article.views }} просмотров
-                </small>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="alert alert-info mb-0">
-            <i class="fas fa-info-circle mr-2"></i>Нет похожих статей
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
