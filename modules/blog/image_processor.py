@@ -1,4 +1,3 @@
-# modules/blog/image_processor.py
 import os
 import cv2
 import numpy as np
@@ -9,8 +8,8 @@ from PIL import Image
 from torchvision.models import resnet18
 from django.conf import settings
 import logging
-from typing import Tuple, List, Dict, Optional  # Добавляем необходимые импорты типов
-import shutil  # Добавляем в импорты
+from typing import Tuple, List, Dict, Optional
+import shutil
 
 
 logger = logging.getLogger(__name__)

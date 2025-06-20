@@ -56,23 +56,6 @@ class CommentAdminPage(DraggableMPTTAdmin):
     list_editable = ('status',)
 
 
-# @admin.register(ArticleFile)
-# class ArticleFileAdmin(admin.ModelAdmin):
-#     list_display = ('title', 'article_link', 'file_type', 'created_at', 'is_active')
-#     list_filter = ('created_at', 'is_active')
-#     search_fields = ('title', 'article__title')
-
-#     def article_link(self, obj):
-#         return format_html('<a href="{}">{}</a>', obj.article.get_absolute_url(), obj.article.title)
-
-#     article_link.short_description = 'Статья'
-
-#     def file_type(self, obj):
-#         return obj.get_file_type()
-
-#     file_type.short_description = 'Тип файла'
-
-# modules/blog/admin.py
 @admin.register(ArticleFile)
 class ArticleFileAdmin(admin.ModelAdmin):
     list_display = ('title', 'article_link', 'file_type', 'created_at')
@@ -89,17 +72,3 @@ class ArticleFileAdmin(admin.ModelAdmin):
     def file_type(self, obj):
         return obj.get_file_type()
     file_type.short_description = 'Тип файла'
-
-# modules/blog/admin.py
-# @admin.register(ArticleFile)
-# class ArticleFileAdmin(admin.ModelAdmin):
-#     list_display = ('title', 'article_link', 'file_type', 'created_at', 'is_active', 'processed')
-#     list_filter = ('created_at', 'is_active', 'processed')
-#     search_fields = ('title', 'article__title')
-#     readonly_fields = ('processing_result_display',)
-
-#     def processing_result_display(self, obj):
-#         if obj.processing_result:
-#             return format_html('<pre>{}</pre>', json.dumps(obj.processing_result, indent=2))
-#         return "-"
-#     processing_result_display.short_description = 'Результат обработки'

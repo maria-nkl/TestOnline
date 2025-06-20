@@ -14,20 +14,6 @@ from .forms import ArticleCreateForm, ArticleUpdateForm, CommentCreateForm
 from ..services.mixins import AuthorRequiredMixin
 
 
-
-
-# class ArticleListView(ListView):
-#     model = Article
-#     template_name = 'blog/articles_list.html'
-#     context_object_name = 'articles'
-#     paginate_by = 2
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['title'] = 'Главная страница'
-#         return context
-
-
 class ArticleListView(ListView):
     model = Article
     template_name = 'blog/articles_list.html'
