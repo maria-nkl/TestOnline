@@ -159,7 +159,6 @@ class Comment(MPTTModel):
         return f'{self.author}:{self.content}'
 
 
-# modules/blog/models.py
 import os
 from django.db import models
 from django.core.validators import FileExtensionValidator
@@ -197,22 +196,7 @@ class ArticleFile(models.Model):
         if self.file.name.lower().endswith(('.jpg', '.jpeg')):
             self.process_image()
 
-    # def process_image(self):
-        # try:
-        #     processor = ImageProcessor()
-        #     results_text = processor.process_uploaded_image(self.file.path)
-            
-        #     # Удаляем старые результаты если есть (ищет по эмодзи-маркеру)
-        #     content = self.article.full_description
-        #     if "## 📊 Результаты обработки шаблонов" in content:
-        #         content = content.split("## 📊 Результаты обработки шаблонов")[0].strip()
-            
-        #     # Добавляем новые результаты с эмодзи
-        #     self.article.full_description = f"{content}\n\n{results_text}"
-        #     self.article.save()
-            
-        # except Exception as e:
-        #     logger.error(f"🛑 Ошибка обработки: {str(e)}")
+
     def process_image(self):
         try:
             processor = ImageProcessor()
